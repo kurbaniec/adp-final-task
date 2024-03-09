@@ -34,4 +34,6 @@ public class User {
     @NotEmpty
     @Size(min = 8, groups = CreateUserValidation.class)
     private String password;
+
+    private UUID imageId;
 }

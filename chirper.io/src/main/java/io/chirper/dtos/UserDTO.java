@@ -21,4 +21,5 @@ public class UserDTO {
     private String username;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String password;
+    private UUID imageId;
 }

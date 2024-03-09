@@ -38,7 +38,7 @@ public class UserController {
     ) {
         logger.debug("register({}, {})", createUser, file);
         var user = mapper.userToEntity(createUser);
-        user = userService.createUser(user);
+        user = userService.createUser(user, file);
         var userDto = mapper.userToDto(user);
         return ResponseEntity.ok(userDto);
     }
