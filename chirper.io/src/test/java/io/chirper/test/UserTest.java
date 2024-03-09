@@ -8,11 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.util.LinkedMultiValueMap;
-
-import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -66,7 +63,7 @@ public class UserTest {
             .username("test")
             .password("testtest")
             .build();
-        var image = FileUtil.mockPngImage("profile.png", ":)");
+        var image = ImageUtil.mockPngImage("profile.png", ":)");
         var body = new LinkedMultiValueMap<String, Object>();
         body.add("data", createUserDto);
         body.add("file", image);
@@ -77,6 +74,12 @@ public class UserTest {
         assertNotNull(userDto.getId());
         assertEquals("test", userDto.getUsername());
         assertNull(userDto.getPassword());
+        assertNotNull(userDto.getImageId());
+
+        var imageResponse = ImageUtil.donwloadImage(
+            userDto.getImageId(), "test", "testtest", restTemplate
+        );
+        assertTrue(imageResponse.getStatusCode().is2xxSuccessful());
     }
 
     @Test
