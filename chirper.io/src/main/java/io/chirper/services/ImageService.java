@@ -1,9 +1,9 @@
 package io.chirper.services;
 
 import io.chirper.entities.Image;
+import io.chirper.entities.StorageFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
 import java.util.UUID;
 
 /**
@@ -13,5 +13,5 @@ import java.util.UUID;
 public interface ImageService {
     Image createImage(MultipartFile file);
 
-    InputStream findImageDataById(UUID fileId);
+    StorageFile findImageDataById(UUID fileId);
 }

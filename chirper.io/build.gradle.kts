@@ -40,6 +40,7 @@ dependencies {
     implementation("io.github.resilience4j:resilience4j-spring-boot2:2.1.0")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
     implementation("org.mapstruct:mapstruct:1.5.5.Final")
+    implementation("org.apache.tika:tika-core:2.7.0")
 
     runtimeOnly("com.h2database:h2")
     compileOnly("org.projectlombok:lombok:1.18.20")

@@ -1,6 +1,7 @@
 package io.chirper.repositories;
 
-import java.io.InputStream;
+import io.chirper.entities.StorageFile;
+
 import java.util.UUID;
 
 /**
@@ -9,6 +10,5 @@ import java.util.UUID;
  */
 public interface StorageRepository {
     void save(UUID fileId, String name, byte[] file);
-    InputStream fetch(UUID fileId);
-
+    StorageFile fetch(UUID fileId);
 }

@@ -1,11 +1,14 @@
 package io.chirper.repositories;
 
+import io.chirper.entities.StorageFile;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
+import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -23,6 +26,7 @@ import java.util.UUID;
 @Component
 public class FileSystemRepository implements StorageRepository {
     private final String RESOURCES_DIR;
+    private final Tika tika = new Tika();
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public FileSystemRepository(ResourceLoader resourceLoader) throws IOException {
@@ -43,13 +47,18 @@ public class FileSystemRepository implements StorageRepository {
     }
 
     @Override
-    public InputStream fetch(UUID fileId) {
+    public StorageFile fetch(UUID fileId) {
         try {
             var path = Paths.get(RESOURCES_DIR + fileId);
             var folder = path.toFile();
             var file = Objects.requireNonNull(folder.listFiles())[0];
+            var name = file.getName();
+            var length = file.length();
+            var mediaTypeString = tika.detect(file);
+            var mediaType = MediaType.parseMediaType(mediaTypeString);
             var resource = new FileSystemResource(file);
-            return resource.getInputStream();
+            var stream = resource.getInputStream();
+            return new StorageFile(name, length, mediaType, stream);
         } catch (Exception ex) {
             logger.error(ex.getMessage());
             throw new EntityNotFoundException();

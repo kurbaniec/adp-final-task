@@ -5,6 +5,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StreamUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,12 +35,15 @@ public class ImageController {
     }
 
     @GetMapping("/download/{file_id}")
-    public void download(
-        @PathVariable("file_id") @NotNull UUID fileId,
-        HttpServletResponse response
-    ) throws IOException {
+    public ResponseEntity<InputStreamResource> download(@PathVariable("file_id") @NotNull UUID fileId) {
         logger.debug("download({})", fileId);
-        var stream = imageService.findImageDataById(fileId);
-        StreamUtils.copy(stream, response.getOutputStream());
+        var storageFile = imageService.findImageDataById(fileId);
+
+        var responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(storageFile.getMediaType());
+        responseHeaders.setContentLength(storageFile.getLength());
+        responseHeaders.setContentDispositionFormData("attachment", storageFile.getName());
+        var inputStreamResource = new InputStreamResource(storageFile.getStream());
+        return new ResponseEntity<>(inputStreamResource, responseHeaders, HttpStatus.OK);
     }
 }

@@ -1,6 +1,7 @@
 package io.chirper.services;
 
 import io.chirper.entities.Image;
+import io.chirper.entities.StorageFile;
 import io.chirper.repositories.ImageRepository;
 import io.chirper.repositories.StorageRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -50,7 +51,7 @@ public class FileSystemImageService implements ImageService {
 
     @Override
     @Transactional(readOnly = true)
-    public InputStream findImageDataById(UUID fileId) {
+    public StorageFile findImageDataById(UUID fileId) {
         logger.debug("findImageDataById({})", fileId);
         if (!imageRepository.existsById(fileId)) {
             throw new EntityNotFoundException();
