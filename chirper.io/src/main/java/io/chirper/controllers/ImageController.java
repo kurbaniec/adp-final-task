@@ -36,7 +36,7 @@ public class ImageController {
 
     @GetMapping("/download/{file_id}")
     public ResponseEntity<InputStreamResource> download(@PathVariable("file_id") @NotNull UUID fileId) {
-        logger.debug("download({})", fileId);
+        logger.info("download({})", fileId);
         var storageFile = imageService.findImageDataById(fileId);
 
         var responseHeaders = new HttpHeaders();

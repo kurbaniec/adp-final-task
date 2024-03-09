@@ -1,6 +1,10 @@
 package io.chirper.controllers;
 
+import io.chirper.dtos.ChirpDTO;
+import io.chirper.dtos.ReplyDTO;
 import io.chirper.dtos.UserDTO;
+import io.chirper.entities.Chirp;
+import io.chirper.entities.Reply;
 import io.chirper.entities.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -16,4 +20,12 @@ public interface ServiceMapper {
 
     @Mapping(target = "password", ignore = true)
     UserDTO userToDto(User entity);
+
+    Chirp chirpToEntity(ChirpDTO dto);
+
+    ChirpDTO chirpToDto(Chirp entity);
+
+    Reply replyToEntity(ReplyDTO dto);
+
+    ReplyDTO replyToDTO(Reply entity);
 }

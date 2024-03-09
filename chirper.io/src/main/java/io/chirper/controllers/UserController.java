@@ -36,7 +36,7 @@ public class UserController {
         @RequestPart(value = "data") @NotNull UserDTO createUser,
         @RequestPart(value = "file", required = false) MultipartFile file
     ) {
-        logger.debug("register({}, {})", createUser, file);
+        logger.info("register({}, {})", createUser, file);
         var user = mapper.userToEntity(createUser);
         user = userService.createUser(user, file);
         var userDto = mapper.userToDto(user);
