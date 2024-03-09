@@ -35,9 +35,9 @@ public class Chirp {
 
     private UUID imageId;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     private User author;
-    @OneToMany
+    @OneToMany(fetch = FetchType.LAZY)
     private List<Reply> replies = Collections.emptyList();
 
     private Instant createdOn = Instant.now();

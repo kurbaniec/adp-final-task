@@ -33,9 +33,9 @@ public class Reply {
 
     private UUID imageId;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     private User author;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Chirp chirp;
 
     private Instant createdOn = Instant.now();

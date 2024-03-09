@@ -2,6 +2,7 @@ package io.chirper.test;
 
 import io.chirper.dtos.ChirpDTO;
 import io.chirper.dtos.UserDTO;
+import io.chirper.repositories.ChirpRepository;
 import io.chirper.repositories.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
@@ -32,6 +34,9 @@ public class ChirpTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @Autowired
+    private ChirpRepository chirpRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -50,24 +55,33 @@ public class ChirpTest {
     }
 
     @AfterEach
-    public void afterEach() { clear(); }
+    public void afterEach() {
+        clear();
+    }
 
     public void clear() {
+        chirpRepository.deleteAll();
         userRepository.deleteAll();
     }
 
     @Test
     void chirp() {
         var requestUrl = "/chirp/chirp";
+        var text = "Hello World!";
         var createChirpDto = ChirpDTO.builder()
-            .text("Hello World!")
+            .text(text)
             .build();
-        var request = authEntity(createChirpDto, userDoe);
+        var body = new LinkedMultiValueMap<String, Object>();
+        body.add("data", createChirpDto);
+        var request = authEntity(body, userDoe);
 
         var chirpDto = restTemplate
             .postForObject(requestUrl, request, ChirpDTO.class);
 
         assertNotNull(chirpDto.getId());
+        assertEquals(text, chirpDto.getText());
+        assertEquals(0, chirpDto.getLikes());
+        assertEquals(userDoe, chirpDto.getAuthor().getUsername());
     }
 
     private void addUser(String username) {
