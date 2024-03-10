@@ -23,9 +23,9 @@ Test can be run via
 
 
 
-TimeLimiter + CircuitBreaker + BulkHead for Create Operations
+TimeLimiter + BulkHead for Create Operations
 
-Retry + CircuitBreaker + RateLimiter 
+Retry + CircuitBreaker + RateLimiter for Get Operations
 
 Image, Cache / Retry
 

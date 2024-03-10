@@ -5,27 +5,28 @@ import io.chirper.configuration.ResilienceConfig;
 import io.chirper.dtos.ChirpDTO;
 import io.chirper.dtos.ReplyDTO;
 import io.chirper.services.ChirpService;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author Kacper Urbaniec
@@ -45,6 +46,10 @@ public class ChirpController {
         this.mapper = mapper;
     }
 
+
+    @CircuitBreaker(name = ResilienceConfig.CIRCUIT_BREAKER_MUTATION, fallbackMethod = "circuitBreakerFallbackCompletion")
+    @TimeLimiter(name = ResilienceConfig.TIME_LIMITER_MUTATION, fallbackMethod = "timeLimiterFallbackCompletion")
+    @Bulkhead(name = "")
     @PostMapping("/chirp")
     public ResponseEntity<ChirpDTO> chirp(
         @RequestPart(value = "data") @NotNull ChirpDTO createChirp,
@@ -139,4 +144,17 @@ public class ChirpController {
         logger.warn("rateLimiterFallback", ex);
         return new ResponseEntity<>("too many requests", HttpStatus.TOO_MANY_REQUESTS);
     }
+
+    @SuppressWarnings("unused")
+    public CompletionStage<ResponseEntity<String>> circuitBreakerFallbackCompletion(CallNotPermittedException ex) {
+        return CompletableFuture.completedFuture(circuitBreakerFallback(ex));
+    }
+
+    @SuppressWarnings("unused")
+    public CompletionStage<ResponseEntity<String>> timeLimiterFallbackCompletion(TimeoutException ex) {
+        logger.warn("timeLimiterFallback {}", ex.getMessage());
+        return CompletableFuture.completedFuture(new ResponseEntity<>("Request timed out", HttpStatus.REQUEST_TIMEOUT));
+    }
+
+
 }

@@ -46,7 +46,8 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-public class ChirpChirpTest {
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+public class FetchChirpTest {
 
     @Autowired
     private CircuitBreakerRegistry circuitBreakerRegistry;
