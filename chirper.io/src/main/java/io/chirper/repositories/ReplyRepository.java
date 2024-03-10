@@ -10,4 +10,5 @@ import java.util.UUID;
  * @version 2024-03-09
  */
 public interface ReplyRepository extends JpaRepository<Reply, UUID> {
+
 }

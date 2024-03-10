@@ -37,7 +37,7 @@ public class FileSystemRepository implements StorageRepository {
     @Override
     public void save(UUID fileId, String name, byte[] file) {
         try {
-            var path = Paths.get(RESOURCES_DIR + fileId + "/" + name);
+            var path = Paths.get(RESOURCES_DIR + "/" + fileId + "/" + name);
             Files.createDirectories(path.getParent());
             Files.write(path, file);
         } catch (Exception ex) {
@@ -49,7 +49,7 @@ public class FileSystemRepository implements StorageRepository {
     @Override
     public StorageFile fetch(UUID fileId) {
         try {
-            var path = Paths.get(RESOURCES_DIR + fileId);
+            var path = Paths.get(RESOURCES_DIR + "/" + fileId);
             var folder = path.toFile();
             var file = Objects.requireNonNull(folder.listFiles())[0];
             var name = file.getName();
