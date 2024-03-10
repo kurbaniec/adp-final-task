@@ -15,6 +15,34 @@ Test can be run via
 
 
 
+
+
+---
+
+
+
+
+
+TimeLimiter + CircuitBreaker + BulkHead for Create Operations
+
+Retry + CircuitBreaker + RateLimiter 
+
+Image, Cache / Retry
+
+
+
+
+
+Pagination
+
+
+
+
+
+
+
+
+
 ## Sources
 
 * https://www.baeldung.com/spring-rest-template-multipart-upload

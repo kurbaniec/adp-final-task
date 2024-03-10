@@ -1,18 +1,28 @@
 package io.chirper.controllers;
 
 import io.chirper.common.PrincipalUtil;
+import io.chirper.configuration.ResilienceConfig;
 import io.chirper.dtos.ChirpDTO;
 import io.chirper.dtos.ReplyDTO;
 import io.chirper.services.ChirpService;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
@@ -67,6 +77,9 @@ public class ChirpController {
         return ResponseEntity.ok(replyDto);
     }
 
+    @Retry(name = ResilienceConfig.RETRY, fallbackMethod = "retryFallback")
+    @CircuitBreaker(name = ResilienceConfig.CIRCUIT_BREAKER, fallbackMethod = "circuitBreakerFallback")
+    @RateLimiter(name = ResilienceConfig.RATE_LIMITER, fallbackMethod = "rateLimiterFallback")
     @GetMapping("/chirp/{chirp_id}")
     public ResponseEntity<ChirpDTO> chirp(
         @PathVariable("chirp_id") UUID chirpId
@@ -103,5 +116,27 @@ public class ChirpController {
         var userId = PrincipalUtil.getUserId(principal);
         chirpService.likeChirp(chirpId, userId);
         return ResponseEntity.ok().build();
+    }
+
+    //================================================================================
+    // Resilience4j Fallbacks
+    //================================================================================
+
+    @SuppressWarnings("unused")
+    public ResponseEntity<String> retryFallback(Exception ex) {
+        logger.warn("retryFallback", ex);
+        return new ResponseEntity<>("all retries have exhausted", HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    @SuppressWarnings("unused")
+    public ResponseEntity<String> circuitBreakerFallback(CallNotPermittedException ex) {
+        logger.warn("circuitBreakerFallback {}", ex.getMessage());
+        return new ResponseEntity<>("service is unavailable", HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    @SuppressWarnings("unused")
+    public ResponseEntity<String> rateLimiterFallback(RequestNotPermitted ex) {
+        logger.warn("rateLimiterFallback", ex);
+        return new ResponseEntity<>("too many requests", HttpStatus.TOO_MANY_REQUESTS);
     }
 }
