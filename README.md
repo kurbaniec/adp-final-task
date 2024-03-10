@@ -1,8 +1,17 @@
 # adp-final-task
 
+## 🚀 Run
 
+```bash
+cd backend
+./gradlew bootRun
+```
 
+Test can be run via
 
+```bash
+./gradlew test
+```
 
 
 
