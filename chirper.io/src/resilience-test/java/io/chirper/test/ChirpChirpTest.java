@@ -26,11 +26,13 @@ import org.springframework.util.LinkedMultiValueMap;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -126,6 +128,61 @@ public class ChirpChirpTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
         assertEquals("all retries have exhausted", response.getBody());
         verify(chirpService, times(3)).fetchChirp(eq(chirpId));
+    }
+
+    @Test
+    void chirp_CircuitBreaker() {
+        var chirpId = UUID.randomUUID();
+        when(chirpService.fetchChirp(eq(chirpId)))
+            .thenThrow(new RuntimeException("Something went wrong!"));
+
+        IntStream.rangeClosed(1, 5)
+            .forEach(i -> {
+                // Retry responses
+                var response = fetchChirp("test", chirpId);
+                assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+                assertEquals("all retries have exhausted", response.getBody());
+            });
+
+        IntStream.rangeClosed(1, 5)
+            .forEach(i -> {
+                // Circuit breaker responses
+                var response = fetchChirp("test", chirpId);
+                assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+                assertEquals("service is unavailable", response.getBody());
+            });
+
+        verify(chirpService, times(5*3)).fetchChirp(eq(chirpId));
+    }
+
+    @Test
+    void chirp_RateLimiter() {
+        var chirpId = UUID.randomUUID();
+
+        var chirp = new Chirp();
+        chirp.setId(chirpId);
+        when(chirpService.fetchChirp(eq(chirpId)))
+            .thenReturn(chirp);
+
+        var chirpDto = ChirpDTO.builder()
+            .id(chirpId)
+            .build();
+        when(mapper.chirpToDto(any(Chirp.class)))
+            .thenReturn(chirpDto);
+
+        Map<Integer, Integer> responseStatusCount = new ConcurrentHashMap<>();
+        IntStream.rangeClosed(1, 150)
+            .parallel()
+            .forEach(i -> {
+                var response = fetchChirp("test", chirpId);
+                var statusCode = response.getStatusCode().value();
+                responseStatusCount.put(statusCode, responseStatusCount.getOrDefault(statusCode, 0) + 1);
+            });
+
+        assertEquals(2, responseStatusCount.keySet().size());
+        assertTrue(responseStatusCount.containsKey(HttpStatus.TOO_MANY_REQUESTS.value()));
+        assertTrue(responseStatusCount.containsKey(HttpStatus.OK.value()));
+        verify(chirpService, atMost(150)).fetchChirp(eq(chirpId));
     }
 
     private ChirpDTO addChirp(String username) {
