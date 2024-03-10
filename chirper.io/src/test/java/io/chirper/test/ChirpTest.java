@@ -24,9 +24,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Kacper Urbaniec
@@ -166,6 +166,23 @@ public class ChirpTest {
         }
     }
 
+    @Test
+    void like_chirp() {
+        var chirpDto = addChirp(userDoe);
+        likeChirp(userMuster, chirpDto);
+        var likedChirpDto = fetchChirp(userDoe, chirpDto.getId());
+        assertEquals(1, likedChirpDto.getLikes());
+    }
+
+    @Test
+    void unlike_chirp() {
+        var chirpDto = addChirp(userDoe);
+        likeChirp(userMuster, chirpDto);
+        likeChirp(userMuster, chirpDto);
+        var unlikedChirpDto = fetchChirp(userDoe, chirpDto.getId());
+        assertEquals(0, unlikedChirpDto.getLikes());
+    }
+
     private void addUser(String username) {
         var requestUrl = "/user/register";
         var createUserDto = UserDTO.builder()
@@ -217,6 +234,17 @@ public class ChirpTest {
             .postForObject(requestUrl, request, ReplyDTO.class);
     }
 
+    private ChirpDTO fetchChirp(
+        String username,
+        UUID chirpId
+    ) {
+        var requestUrl = "/chirp/chirp/" + chirpId;
+        var request = authEntity(null, username);
+        return restTemplate
+            .exchange(requestUrl, HttpMethod.GET, request, ChirpDTO.class)
+            .getBody();
+    }
+
     private List<ChirpDTO> fetchFeed(
         String username,
         int page, int pageSize, boolean descending
@@ -232,6 +260,14 @@ public class ChirpTest {
         return restTemplate
             .exchange(requestUrl, HttpMethod.GET, request, new ParameterizedTypeReference<List<ChirpDTO>>() {})
             .getBody();
+    }
+
+    private void likeChirp(String username, ChirpDTO chirp) {
+        var requestUrl = "/chirp/chirp/like/" + chirp.getId();
+        var request = authEntity(null, username);
+        var response = restTemplate
+            .postForEntity(requestUrl, request, Void.class);
+        assertTrue(response.getStatusCode().is2xxSuccessful());
     }
 
     private <T> HttpEntity<T> authEntity(T body, String username) {

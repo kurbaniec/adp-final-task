@@ -93,4 +93,15 @@ public class ChirpController {
             .toList();
         return ResponseEntity.ok(chirpDtos);
     }
+
+    @PostMapping("/chirp/like/{chirp_id}")
+    public ResponseEntity<Void> likeChirp(
+        @PathVariable("chirp_id") UUID chirpId,
+        Principal principal
+    ) {
+        logger.info("likeChirp({})", chirpId);
+        var userId = PrincipalUtil.getUserId(principal);
+        chirpService.likeChirp(chirpId, userId);
+        return ResponseEntity.ok().build();
+    }
 }

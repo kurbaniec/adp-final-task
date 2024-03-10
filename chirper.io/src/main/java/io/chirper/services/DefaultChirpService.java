@@ -1,12 +1,15 @@
 package io.chirper.services;
 
 import io.chirper.entities.Chirp;
+import io.chirper.entities.Like;
 import io.chirper.entities.Reply;
 import io.chirper.entities.User;
 import io.chirper.repositories.ChirpRepository;
+import io.chirper.repositories.LikeRepository;
 import io.chirper.repositories.ReplyRepository;
 import io.chirper.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -36,13 +39,15 @@ import java.util.UUID;
 public class DefaultChirpService implements ChirpService {
     private final ChirpRepository chirpRepository;
     private final ReplyRepository replyRepository;
+    private final LikeRepository likeRepository;
     private final UserRepository userRepository;
     private final ImageService imageService;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public DefaultChirpService(ChirpRepository chirpRepository, ReplyRepository replyRepository, UserRepository userRepository, ImageService imageService) {
+    public DefaultChirpService(ChirpRepository chirpRepository, ReplyRepository replyRepository, LikeRepository likeRepository, UserRepository userRepository, ImageService imageService) {
         this.chirpRepository = chirpRepository;
         this.replyRepository = replyRepository;
+        this.likeRepository = likeRepository;
         this.userRepository = userRepository;
         this.imageService = imageService;
     }
@@ -120,5 +125,36 @@ public class DefaultChirpService implements ChirpService {
             .toList();
     }
 
+    @Override
+    @Transactional
+    public void likeChirp(
+        @NotNull UUID chirpId,
+        @NotNull UUID userId
+    ) {
+        logger.debug("likeChirp({}, {})", chirpId, userId);
+        var chirp = chirpRepository
+            .findById(chirpId)
+            .orElseThrow(EntityNotFoundException::new);
+        if (chirp.getAuthor().getId().equals(userId)) {
+            throw new ConstraintViolationException("User cannot like own chirp", null);
+        }
+        var likeMarker = likeRepository
+            .findByResourceIdAndUserId(chirpId, userId);
+        if (likeMarker.isPresent()) {
+            // Remove like
+            likeRepository.delete(likeMarker.get());
+            var newLikes = chirp.getLikes() - 1;
+            chirp.setLikes(newLikes);
+        } else {
+            // Add like
+            var like = new Like();
+            like.setResourceId(chirpId);
+            like.setUserId(userId);
+            likeRepository.save(like);
+
+            var newLikes = chirp.getLikes() + 1;
+            chirp.setLikes(newLikes);
+        }
+    }
 
 }

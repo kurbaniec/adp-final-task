@@ -37,4 +37,9 @@ public interface ChirpService {
         boolean descending,
         @NotNull UUID userId
     );
+
+    void likeChirp(
+        @NotNull UUID chirpId,
+        @NotNull UUID userId
+    );
 }
