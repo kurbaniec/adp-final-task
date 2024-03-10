@@ -37,7 +37,7 @@ public class Chirp {
 
     @OneToOne(fetch = FetchType.EAGER)
     private User author;
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "chirp")
     private List<Reply> replies = Collections.emptyList();
 
     private Instant createdOn = Instant.now();

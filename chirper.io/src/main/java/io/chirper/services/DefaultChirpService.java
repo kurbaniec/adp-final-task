@@ -85,4 +85,15 @@ public class DefaultChirpService implements ChirpService {
         createReply.setCreatedOn(Instant.now());
         return replyRepository.save(createReply);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Chirp fetchChirp(@NotNull UUID chirpId) {
+        logger.debug("fetchChirp({})", chirpId);
+        return chirpRepository
+            .findByIdWithReplies(chirpId)
+            .orElseThrow(EntityNotFoundException::new);
+    }
+
+
 }

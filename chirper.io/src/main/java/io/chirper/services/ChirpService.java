@@ -25,4 +25,6 @@ public interface ChirpService {
         MultipartFile media,
         @NotNull UUID userId
     );
+
+    Chirp fetchChirp(@NotNull UUID chirpId);
 }

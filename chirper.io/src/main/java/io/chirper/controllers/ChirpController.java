@@ -10,13 +10,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
+import java.util.UUID;
 
 /**
  * @author Kacper Urbaniec
@@ -66,5 +64,15 @@ public class ChirpController {
         reply = chirpService.createReply(chirpId, reply, file, userId);
         var replyDto = mapper.replyToDTO(reply);
         return ResponseEntity.ok(replyDto);
+    }
+
+    @GetMapping("/chirp/{chirp_id}")
+    public ResponseEntity<ChirpDTO> chirp(
+        @PathVariable("chirp_id") UUID chirpId
+    ) {
+        logger.info("chirp({})", chirpId);
+        var chirp = chirpService.fetchChirp(chirpId);
+        var chirpDto = mapper.chirpToDto(chirp);
+        return ResponseEntity.ok(chirpDto);
     }
 }
