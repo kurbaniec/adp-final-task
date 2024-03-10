@@ -8,15 +8,22 @@ import io.chirper.repositories.ReplyRepository;
 import io.chirper.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.query.SortDirection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -93,6 +100,24 @@ public class DefaultChirpService implements ChirpService {
         return chirpRepository
             .findByIdWithReplies(chirpId)
             .orElseThrow(EntityNotFoundException::new);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Chirp> fetchFeed(
+        @Max(50) @Min(1) int size,
+        @Min(0) int page,
+        boolean descending,
+        @NotNull UUID userId
+    ) {
+        logger.debug("fetchFeed({}, {}, {})", size, page, descending);
+        var sortedByCreatedOn = descending ?
+            Sort.by("createdOn").descending() :
+            Sort.by("createdOn").ascending();
+        var pageRequest = PageRequest.of(page, size, sortedByCreatedOn);
+        return chirpRepository
+            .findAllByAuthorIdNotIn(List.of(userId), pageRequest)
+            .toList();
     }
 
 

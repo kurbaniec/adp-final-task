@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -74,5 +75,22 @@ public class ChirpController {
         var chirp = chirpService.fetchChirp(chirpId);
         var chirpDto = mapper.chirpToDto(chirp);
         return ResponseEntity.ok(chirpDto);
+    }
+
+    @GetMapping("/feed")
+    public ResponseEntity<List<ChirpDTO>> chirp(
+        @RequestParam int size,
+        @RequestParam int page,
+        @RequestParam boolean descending,
+        Principal principal
+    ) {
+        logger.info("feed({}, {}, {})", size, page, descending);
+        var userId = PrincipalUtil.getUserId(principal);
+        var chirps = chirpService.fetchFeed(size, page, descending, userId);
+        var chirpDtos = chirps
+            .stream()
+            .map(mapper::chirpToDtoWithoutReplies)
+            .toList();
+        return ResponseEntity.ok(chirpDtos);
     }
 }

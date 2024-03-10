@@ -35,7 +35,7 @@ public class Chirp {
 
     private UUID imageId;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     private User author;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "chirp")
     private List<Reply> replies = Collections.emptyList();

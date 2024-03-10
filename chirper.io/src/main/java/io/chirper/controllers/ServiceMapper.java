@@ -25,6 +25,9 @@ public interface ServiceMapper {
 
     ChirpDTO chirpToDto(Chirp entity);
 
+    @Mapping(target = "replies", ignore = true)
+    ChirpDTO chirpToDtoWithoutReplies(Chirp entity);
+
     @Mapping(target = "chirp", ignore = true)
     Reply replyToEntity(ReplyDTO dto);
 

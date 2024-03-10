@@ -33,7 +33,7 @@ public class Reply {
 
     private UUID imageId;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     private User author;
     @ManyToOne(fetch = FetchType.LAZY)
     private Chirp chirp;

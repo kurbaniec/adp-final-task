@@ -6,18 +6,19 @@ import io.chirper.dtos.UserDTO;
 import io.chirper.repositories.ChirpRepository;
 import io.chirper.repositories.ReplyRepository;
 import io.chirper.repositories.UserRepository;
-import org.assertj.core.util.Streams;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.ChronoUnit;
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @version 2024-03-09
  */
 
+@SuppressWarnings("VulnerableCodeUsages")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class ChirpTest {
@@ -145,6 +147,25 @@ public class ChirpTest {
         }
     }
 
+    @Test
+    void query_feed() {
+        for (var i = 0; i < 5; ++i) {
+            var createChirpDto = addChirp(userMuster, "Test #" + i);
+            addReply(userSmith, createChirpDto, "Already #" + i + " ?!?");
+        }
+
+        var pageSize = 2;
+        var expected = List.of(2, 2, 1, 0);
+        for (var page = 0; page < expected.size(); ++page) {
+            var size = expected.get(page);
+            var chirpDtos = fetchFeed(
+                userDoe, page, pageSize,  true
+            );
+            assertNotNull(chirpDtos);
+            assertEquals(size, chirpDtos.size());
+        }
+    }
+
     private void addUser(String username) {
         var requestUrl = "/user/register";
         var createUserDto = UserDTO.builder()
@@ -194,6 +215,23 @@ public class ChirpTest {
 
         return restTemplate
             .postForObject(requestUrl, request, ReplyDTO.class);
+    }
+
+    private List<ChirpDTO> fetchFeed(
+        String username,
+        int page, int pageSize, boolean descending
+    ) {
+        var requestUrl = "/chirp/feed";
+        requestUrl = UriComponentsBuilder.fromPath(requestUrl)
+            .queryParam("page", page)
+            .queryParam("size", pageSize)
+            .queryParam("descending", descending)
+            .encode()
+            .toUriString();
+        var request = authEntity(null, username);
+        return restTemplate
+            .exchange(requestUrl, HttpMethod.GET, request, new ParameterizedTypeReference<List<ChirpDTO>>() {})
+            .getBody();
     }
 
     private <T> HttpEntity<T> authEntity(T body, String username) {
