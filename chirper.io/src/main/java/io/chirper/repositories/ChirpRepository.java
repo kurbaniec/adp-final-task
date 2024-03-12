@@ -20,4 +20,7 @@ public interface ChirpRepository extends JpaRepository<Chirp, UUID> {
 
     @Query("SELECT c FROM Chirp c WHERE c.author.id NOT IN :excludeAuthorIds")
     Page<Chirp> findAllByAuthorIdNotIn(List<UUID> excludeAuthorIds, Pageable pageable);
+
+    @Query("SELECT c FROM Chirp c WHERE c.author.id = :authorId")
+    Page<Chirp> findAllByAuthorId(UUID authorId, Pageable pageable);
 }

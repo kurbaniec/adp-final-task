@@ -149,16 +149,41 @@ public class ChirpTest {
 
     @Test
     void query_feed() {
+        // Part of feed
         for (var i = 0; i < 5; ++i) {
             var createChirpDto = addChirp(userMuster, "Test #" + i);
             addReply(userSmith, createChirpDto, "Already #" + i + " ?!?");
         }
+        // Not part of feed
+        addChirp(userDoe, "Own");
 
         var pageSize = 2;
         var expected = List.of(2, 2, 1, 0);
         for (var page = 0; page < expected.size(); ++page) {
             var size = expected.get(page);
             var chirpDtos = fetchFeed(
+                userDoe, page, pageSize,  true
+            );
+            assertNotNull(chirpDtos);
+            assertEquals(size, chirpDtos.size());
+        }
+    }
+
+    @Test
+    void query_own() {
+        // Part of own chirps
+        for (var i = 0; i < 5; ++i) {
+            var createChirpDto = addChirp(userDoe, "Test #" + i);
+            addReply(userSmith, createChirpDto, "Already #" + i + " ?!?");
+        }
+        // Not part of own
+        addChirp(userSmith, "Not own");
+
+        var pageSize = 2;
+        var expected = List.of(2, 2, 1, 0);
+        for (var page = 0; page < expected.size(); ++page) {
+            var size = expected.get(page);
+            var chirpDtos = fetchOwn(
                 userDoe, page, pageSize,  true
             );
             assertNotNull(chirpDtos);
@@ -271,6 +296,23 @@ public class ChirpTest {
         int page, int pageSize, boolean descending
     ) {
         var requestUrl = "/chirp/feed";
+        requestUrl = UriComponentsBuilder.fromPath(requestUrl)
+            .queryParam("page", page)
+            .queryParam("size", pageSize)
+            .queryParam("descending", descending)
+            .encode()
+            .toUriString();
+        var request = authEntity(null, username);
+        return restTemplate
+            .exchange(requestUrl, HttpMethod.GET, request, new ParameterizedTypeReference<List<ChirpDTO>>() {})
+            .getBody();
+    }
+
+    private List<ChirpDTO> fetchOwn(
+        String username,
+        int page, int pageSize, boolean descending
+    ) {
+        var requestUrl = "/chirp/own";
         requestUrl = UriComponentsBuilder.fromPath(requestUrl)
             .queryParam("page", page)
             .queryParam("size", pageSize)

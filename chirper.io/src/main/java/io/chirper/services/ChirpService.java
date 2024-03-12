@@ -38,6 +38,13 @@ public interface ChirpService {
         @NotNull UUID userId
     );
 
+    List<Chirp> fetchOwn(
+        @Max(50) @Min(1) int size,
+        @Min(0) int page,
+        boolean descending,
+        @NotNull UUID userId
+    );
+
     void likeChirp(
         @NotNull UUID chirpId,
         @NotNull UUID userId

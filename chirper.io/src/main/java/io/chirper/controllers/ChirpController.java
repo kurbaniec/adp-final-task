@@ -139,6 +139,29 @@ public class ChirpController {
         }, logger);
     }
 
+    @GetMapping("/own")
+    @Retry(name = ResilienceConfig.RETRY, fallbackMethod = "retryFallback")
+    @CircuitBreaker(name = ResilienceConfig.CIRCUIT_BREAKER, fallbackMethod = "circuitBreakerFallback")
+    @RateLimiter(name = ResilienceConfig.RATE_LIMITER, fallbackMethod = "rateLimiterFallback")
+    @ApiResponse(responseCode = "200", content = {@Content(array = @ArraySchema(schema = @Schema(implementation = ChirpDTO.class)))})
+    public ResponseEntity<?> own(
+        @RequestParam int size,
+        @RequestParam int page,
+        @RequestParam boolean descending,
+        Principal principal
+    ) {
+        logger.info("own({}, {}, {})", size, page, descending);
+        return catchValidationAndNotFoundEx(() -> {
+            var userId = PrincipalUtil.getUserId(principal);
+            var chirps = chirpService.fetchOwn(size, page, descending, userId);
+            var chirpDtos = chirps
+                .stream()
+                .map(mapper::chirpToDtoWithoutReplies)
+                .toList();
+            return ResponseEntity.ok(chirpDtos);
+        }, logger);
+    }
+
     @PostMapping("/chirp/like/{chirp_id}")
     @CircuitBreaker(name = ResilienceConfig.CIRCUIT_BREAKER_MUTATION, fallbackMethod = "circuitBreakerFallbackCompletion")
     @TimeLimiter(name = ResilienceConfig.TIME_LIMITER_MUTATION, fallbackMethod = "timeLimiterFallbackCompletion")

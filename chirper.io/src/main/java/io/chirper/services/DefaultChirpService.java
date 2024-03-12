@@ -129,6 +129,18 @@ public class DefaultChirpService implements ChirpService {
     }
 
     @Override
+    public List<Chirp> fetchOwn(int size, int page, boolean descending, UUID userId) {
+        logger.debug("fetchOwn({}, {}, {})", size, page, descending);
+        var sortedByCreatedOn = descending ?
+            Sort.by("createdOn").descending() :
+            Sort.by("createdOn").ascending();
+        var pageRequest = PageRequest.of(page, size, sortedByCreatedOn);
+        return chirpRepository
+            .findAllByAuthorId(userId, pageRequest)
+            .toList();
+    }
+
+    @Override
     @Transactional
     public void likeChirp(
         @NotNull UUID chirpId,
