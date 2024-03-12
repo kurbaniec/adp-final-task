@@ -157,7 +157,7 @@ public class ChirpController {
     }
 
     //================================================================================
-    // Resilience4j Fallbacks
+    // region Resilience4j Fallbacks
     //================================================================================
 
     @SuppressWarnings("unused")
@@ -194,5 +194,7 @@ public class ChirpController {
         logger.warn("bulkheadFallback {}", ex.getMessage());
         return CompletableFuture.completedFuture(new ResponseEntity<>("limit exceeded", HttpStatus.BANDWIDTH_LIMIT_EXCEEDED));
     }
+
+    // endregion
 
 }

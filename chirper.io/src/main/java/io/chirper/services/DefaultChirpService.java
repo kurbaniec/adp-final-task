@@ -93,6 +93,7 @@ public class DefaultChirpService implements ChirpService {
             createReply.setImageId(image.getId());
         }
         createReply.setChirp(chirp);
+        createReply.setLikes(0L);
         createReply.setAuthor(user);
         createReply.setCreatedOn(Instant.now());
         return replyRepository.save(createReply);

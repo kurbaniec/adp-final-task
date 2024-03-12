@@ -67,6 +67,10 @@ public class UserController {
         }, logger);
     }
 
+    //================================================================================
+    // region Resilience4j Fallbacks
+    //================================================================================
+
     @SuppressWarnings("unused")
     public ResponseEntity<String> circuitBreakerFallback(CallNotPermittedException ex) {
         logger.warn("circuitBreakerFallback {}", ex.getMessage());
@@ -89,4 +93,6 @@ public class UserController {
         logger.warn("bulkheadFallback {}", ex.getMessage());
         return CompletableFuture.completedFuture(new ResponseEntity<>("limit exceeded", HttpStatus.BANDWIDTH_LIMIT_EXCEEDED));
     }
+
+    // endregion
 }
