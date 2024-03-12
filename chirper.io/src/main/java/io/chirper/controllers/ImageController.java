@@ -32,8 +32,9 @@ public class ImageController {
         this.imageService = imageService;
     }
 
+    @Cacheable("images")
     @GetMapping("/download/{file_id}")
-    public ResponseEntity<InputStreamResource> download(@PathVariable("file_id") @NotNull UUID fileId) {
+    public ResponseEntity<byte[]> download(@PathVariable("file_id") @NotNull UUID fileId) throws IOException {
         logger.info("download({})", fileId);
         var storageFile = imageService.findImageDataById(fileId);
 
