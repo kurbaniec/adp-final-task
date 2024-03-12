@@ -1,7 +1,6 @@
 package io.chirper.test;
 
 import io.chirper.configuration.ResilienceConfig;
-import io.chirper.controllers.ServiceMapper;
 import io.chirper.dtos.ChirpDTO;
 import io.chirper.entities.Chirp;
 import io.chirper.entities.User;
@@ -58,11 +57,10 @@ public class CircuitBreakerTimeLimiterBulkheadTest {
     @MockBean
     private ChirpService chirpService;
 
-    @MockBean
-    private ServiceMapper mapper;
-
     @BeforeEach
-    public void resetCircuitBreakerRetry() {
+    public void resetResilience() {
+        // Reset resilience4j to run tests in any order
+        // Works for circuit breaker but oddly not for bulkhead
         var circuitBreaker = circuitBreakerRegistry
             .circuitBreaker(ResilienceConfig.CIRCUIT_BREAKER_MUTATION);
         circuitBreaker.reset();
@@ -120,6 +118,29 @@ public class CircuitBreakerTimeLimiterBulkheadTest {
 
         var response = addChirp("test");
         assertEquals(HttpStatus.REQUEST_TIMEOUT, response.getStatusCode());
+    }
+
+    @Test
+    void chirp_CircuitBreaker() {
+        when(chirpService.createChirp(any(), any(), any()))
+            .thenThrow(new RuntimeException("Something went wrong!"));
+
+        IntStream.rangeClosed(1, 15)
+            .forEach(i -> {
+                // Erroneous responses
+                var response = addChirp("test");
+                assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+            });
+
+        IntStream.rangeClosed(1, 5)
+            .forEach(i -> {
+                // Circuit breaker responses
+                var response = addChirp("test");
+                assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+                assertEquals("service is unavailable", response.getBody());
+            });
+
+        verify(chirpService, times(15)).createChirp(any(), any(), any());
     }
 
     private ResponseEntity<String> addChirp(String username) {

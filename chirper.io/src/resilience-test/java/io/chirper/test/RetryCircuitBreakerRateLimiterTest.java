@@ -10,10 +10,8 @@ import io.chirper.repositories.UserRepository;
 import io.chirper.services.ChirpService;
 import io.chirper.services.UserService;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import io.github.resilience4j.retry.RetryRegistry;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -54,6 +52,9 @@ public class RetryCircuitBreakerRateLimiterTest {
     private CircuitBreakerRegistry circuitBreakerRegistry;
 
     @Autowired
+    private RetryRegistry retryRegistry;
+
+    @Autowired
     private TestRestTemplate restTemplate;
 
     @Autowired
@@ -69,10 +70,17 @@ public class RetryCircuitBreakerRateLimiterTest {
     private ServiceMapper mapper;
 
     @BeforeEach
-    public void resetCircuitBreakerRetry() {
+    public void resetResilience() {
+        // Reset resilience4j to run tests in any order
+        // Works for retry, circuit breaker but oddly not for rate limiter
+        // https://github.com/resilience4j/resilience4j/issues/1105
         var circuitBreaker = circuitBreakerRegistry
             .circuitBreaker(ResilienceConfig.CIRCUIT_BREAKER);
         circuitBreaker.reset();
+
+        var retry = retryRegistry.retry(ResilienceConfig.RETRY);
+        retryRegistry.remove(ResilienceConfig.RETRY);
+        retryRegistry.addConfiguration(retry.getName(), retry.getRetryConfig());
     }
 
     @BeforeEach
@@ -156,6 +164,7 @@ public class RetryCircuitBreakerRateLimiterTest {
     }
 
     @Test
+    @Order(1)
     void chirp_RateLimiter() {
         var chirpId = UUID.randomUUID();
 
@@ -225,6 +234,4 @@ public class RetryCircuitBreakerRateLimiterTest {
         var request = authEntity(null, username);
         return restTemplate.exchange(requestUrl, HttpMethod.GET, request, String.class);
     }
-
-
 }
