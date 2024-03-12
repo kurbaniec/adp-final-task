@@ -19,18 +19,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.*;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.LinkedMultiValueMap;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
+import static io.chirper.test.TestUtil.authEntity;
+import static io.chirper.test.TestUtil.passwd;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,7 +43,6 @@ import static org.mockito.Mockito.*;
  * @author Kacper Urbaniec
  * @version 2024-03-10
  */
-
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -79,11 +80,9 @@ public class RetryCircuitBreakerRateLimiterTest {
         userRepository.deleteAll();
         var user = new User();
         user.setUsername("test");
-        user.setPassword("testtest");
+        user.setPassword(passwd);
         userService.createUser(user, null);
     }
-
-    private final String passwd = "testtest";
 
     @Test
     void chirp_Retry_Success() {
@@ -225,16 +224,6 @@ public class RetryCircuitBreakerRateLimiterTest {
         var requestUrl = "/chirp/chirp/" + chirpId;
         var request = authEntity(null, username);
         return restTemplate.exchange(requestUrl, HttpMethod.GET, request, String.class);
-    }
-
-    private <T> HttpEntity<T> authEntity(T body, String username) {
-        HttpHeaders headers = new HttpHeaders();
-        var auth = username + ":" + passwd;
-        var encodedAuth = Base64.getEncoder().encodeToString(
-            auth.getBytes(StandardCharsets.US_ASCII));
-        var authHeader = "Basic " + encodedAuth;
-        headers.add("Authorization", authHeader);
-        return new HttpEntity<>(body, headers);
     }
 
 

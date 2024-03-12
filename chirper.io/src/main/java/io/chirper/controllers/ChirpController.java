@@ -5,6 +5,7 @@ import io.chirper.configuration.ResilienceConfig;
 import io.chirper.dtos.ChirpDTO;
 import io.chirper.dtos.ReplyDTO;
 import io.chirper.services.ChirpService;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -49,9 +50,9 @@ public class ChirpController {
 
     @CircuitBreaker(name = ResilienceConfig.CIRCUIT_BREAKER_MUTATION, fallbackMethod = "circuitBreakerFallbackCompletion")
     @TimeLimiter(name = ResilienceConfig.TIME_LIMITER_MUTATION, fallbackMethod = "timeLimiterFallbackCompletion")
-    @Bulkhead(name = "")
+    @Bulkhead(name = ResilienceConfig.BULKHEAD_MUTATION, fallbackMethod = "bulkheadFallbackCompletion")
     @PostMapping("/chirp")
-    public ResponseEntity<ChirpDTO> chirp(
+    public CompletionStage<ResponseEntity<ChirpDTO>> chirp(
         @RequestPart(value = "data") @NotNull ChirpDTO createChirp,
         @RequestPart(value = "file", required = false) MultipartFile file,
         Principal principal
@@ -61,7 +62,8 @@ public class ChirpController {
         var chirp = mapper.chirpToEntity(createChirp);
         chirp = chirpService.createChirp(chirp, file, userId);
         var chirpDto = mapper.chirpToDto(chirp);
-        return ResponseEntity.ok(chirpDto);
+        var response = ResponseEntity.ok(chirpDto);
+        return CompletableFuture.completedFuture(response);
     }
 
     @PostMapping("/reply")
@@ -153,8 +155,13 @@ public class ChirpController {
     @SuppressWarnings("unused")
     public CompletionStage<ResponseEntity<String>> timeLimiterFallbackCompletion(TimeoutException ex) {
         logger.warn("timeLimiterFallback {}", ex.getMessage());
-        return CompletableFuture.completedFuture(new ResponseEntity<>("Request timed out", HttpStatus.REQUEST_TIMEOUT));
+        return CompletableFuture.completedFuture(new ResponseEntity<>("request timed out", HttpStatus.REQUEST_TIMEOUT));
     }
 
+    @SuppressWarnings("unused")
+    public CompletionStage<ResponseEntity<String>> bulkheadFallbackCompletion(BulkheadFullException ex) {
+        logger.warn("bulkheadFallback {}", ex.getMessage());
+        return CompletableFuture.completedFuture(new ResponseEntity<>("limit exceeded", HttpStatus.BANDWIDTH_LIMIT_EXCEEDED));
+    }
 
 }
