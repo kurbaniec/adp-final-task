@@ -9,10 +9,7 @@ import io.chirper.repositories.UserRepository;
 import io.chirper.services.ChirpService;
 import io.chirper.services.UserService;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,7 +30,6 @@ import static io.chirper.test.TestUtil.passwd;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -68,7 +64,7 @@ public class CircuitBreakerTimeLimiterBulkheadTest {
     @BeforeEach
     public void resetCircuitBreakerRetry() {
         var circuitBreaker = circuitBreakerRegistry
-            .circuitBreaker(ResilienceConfig.CIRCUIT_BREAKER);
+            .circuitBreaker(ResilienceConfig.CIRCUIT_BREAKER_MUTATION);
         circuitBreaker.reset();
     }
 
@@ -82,6 +78,7 @@ public class CircuitBreakerTimeLimiterBulkheadTest {
     }
 
     @Test
+    @Order(1)
     void chirp_Bulkhead() {
         var chirpId = UUID.randomUUID();
         var text = "Hello World!";
@@ -93,7 +90,10 @@ public class CircuitBreakerTimeLimiterBulkheadTest {
         chirp.setAuthor(user);
 
         when(chirpService.createChirp(any(), any(), any()))
-            .thenReturn(chirp);
+            .thenAnswer(invocation -> {
+                Thread.sleep(250);
+                return chirp;
+            });
 
         var responseStatusCount = new ConcurrentHashMap<Integer, Integer>();
         IntStream.rangeClosed(1, 5)
@@ -108,6 +108,18 @@ public class CircuitBreakerTimeLimiterBulkheadTest {
         assertTrue(responseStatusCount.containsKey(HttpStatus.BANDWIDTH_LIMIT_EXCEEDED.value()));
         assertTrue(responseStatusCount.containsKey(HttpStatus.OK.value()));
         verify(chirpService, times(3)).createChirp(any(), any(), any());
+    }
+
+    @Test
+    void chirp_TimeLimiter() {
+        when(chirpService.createChirp(any(), any(), any()))
+            .thenAnswer(invocation -> {
+                Thread.sleep(5000);
+                return new Chirp();
+            });
+
+        var response = addChirp("test");
+        assertEquals(HttpStatus.REQUEST_TIMEOUT, response.getStatusCode());
     }
 
     private ResponseEntity<String> addChirp(String username) {

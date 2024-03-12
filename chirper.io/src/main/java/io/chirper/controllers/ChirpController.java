@@ -58,12 +58,13 @@ public class ChirpController {
         Principal principal
     ) {
         logger.info("chirp({})", createChirp);
-        var userId = PrincipalUtil.getUserId(principal);
-        var chirp = mapper.chirpToEntity(createChirp);
-        chirp = chirpService.createChirp(chirp, file, userId);
-        var chirpDto = mapper.chirpToDto(chirp);
-        var response = ResponseEntity.ok(chirpDto);
-        return CompletableFuture.completedFuture(response);
+        return CompletableFuture.supplyAsync(() -> {
+            var userId = PrincipalUtil.getUserId(principal);
+            var chirp = mapper.chirpToEntity(createChirp);
+            chirp = chirpService.createChirp(chirp, file, userId);
+            var chirpDto = mapper.chirpToDto(chirp);
+            return ResponseEntity.ok(chirpDto);
+        });
     }
 
     @PostMapping("/reply")
