@@ -3,8 +3,6 @@ package io.chirper.services;
 import io.chirper.entities.User;
 import io.chirper.repositories.UserRepository;
 import io.chirper.validators.CreateUserValidation;
-import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
