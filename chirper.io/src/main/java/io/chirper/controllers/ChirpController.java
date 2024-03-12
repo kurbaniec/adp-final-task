@@ -156,6 +156,23 @@ public class ChirpController {
         }, logger);
     }
 
+    @PostMapping("/reply/like/{reply_id}")
+    @CircuitBreaker(name = ResilienceConfig.CIRCUIT_BREAKER_MUTATION, fallbackMethod = "circuitBreakerFallbackCompletion")
+    @TimeLimiter(name = ResilienceConfig.TIME_LIMITER_MUTATION, fallbackMethod = "timeLimiterFallbackCompletion")
+    @Bulkhead(name = ResilienceConfig.BULKHEAD_MUTATION, fallbackMethod = "bulkheadFallbackCompletion")
+    @ApiResponse(responseCode = "200")
+    public CompletionStage<ResponseEntity<?>> likeReply(
+        @PathVariable("reply_id") UUID replyId,
+        Principal principal
+    ) {
+        logger.info("likeReply({})", replyId);
+        return catchValidationAndNotFoundExAsync(() -> {
+            var userId = PrincipalUtil.getUserId(principal);
+            chirpService.likeReply(replyId, userId);
+            return ResponseEntity.ok().build();
+        }, logger);
+    }
+
     //================================================================================
     // region Resilience4j Fallbacks
     //================================================================================

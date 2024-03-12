@@ -28,6 +28,8 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @author Kacper Urbaniec
@@ -139,22 +141,56 @@ public class DefaultChirpService implements ChirpService {
         if (chirp.getAuthor().getId().equals(userId)) {
             throw new ConstraintViolationException("User cannot like own chirp", null);
         }
+        onLike(chirpId, userId, () -> {
+            // Remove
+            var newLikes = chirp.getLikes() - 1;
+            chirp.setLikes(newLikes);
+        }, () -> {
+            // Add
+            var newLikes = chirp.getLikes() + 1;
+            chirp.setLikes(newLikes);
+        });
+    }
+
+    @Override
+    @Transactional
+    public void likeReply(UUID replyId, UUID userId) {
+        logger.debug("likeReply({}, {})", replyId, userId);
+        var reply = replyRepository
+            .findById(replyId)
+            .orElseThrow(EntityNotFoundException::new);
+        if (reply.getAuthor().getId().equals(userId)) {
+            throw new ConstraintViolationException("User cannot like own reply", null);
+        }
+        onLike(replyId, userId, () -> {
+            // Remove
+            var newLikes = reply.getLikes() - 1;
+            reply.setLikes(newLikes);
+        }, () -> {
+            // Add
+            var newLikes = reply.getLikes() + 1;
+            reply.setLikes(newLikes);
+        });
+    }
+
+    private void onLike(
+        UUID resourceId, UUID userId,
+        Runnable isPresent,
+        Runnable notPresent
+    ) {
         var likeMarker = likeRepository
-            .findByResourceIdAndUserId(chirpId, userId);
+            .findByResourceIdAndUserId(resourceId, userId);
         if (likeMarker.isPresent()) {
             // Remove like
             likeRepository.delete(likeMarker.get());
-            var newLikes = chirp.getLikes() - 1;
-            chirp.setLikes(newLikes);
+            isPresent.run();
         } else {
             // Add like
             var like = new Like();
-            like.setResourceId(chirpId);
+            like.setResourceId(resourceId);
             like.setUserId(userId);
             likeRepository.save(like);
-
-            var newLikes = chirp.getLikes() + 1;
-            chirp.setLikes(newLikes);
+            notPresent.run();
         }
     }
 

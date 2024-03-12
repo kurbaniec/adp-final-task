@@ -183,6 +183,27 @@ public class ChirpTest {
         assertEquals(0, unlikedChirpDto.getLikes());
     }
 
+    @Test
+    void like_reply() {
+        var chirpDto = addChirp(userDoe);
+        var replyDto = addReply(userSmith, chirpDto);
+        likeReply(userDoe, replyDto);
+        var likedChirpDto = fetchChirp(userDoe, chirpDto.getId());
+        var likedReply = likedChirpDto.getReplies().get(0);
+        assertEquals(1, likedReply.getLikes());
+    }
+
+    @Test
+    void unlike_reply() {
+        var chirpDto = addChirp(userDoe);
+        var replyDto = addReply(userSmith, chirpDto);
+        likeReply(userDoe, replyDto);
+        likeReply(userDoe, replyDto);
+        var likedChirpDto = fetchChirp(userDoe, chirpDto.getId());
+        var likedReply = likedChirpDto.getReplies().get(0);
+        assertEquals(0, likedReply.getLikes());
+    }
+
     private void addUser(String username) {
         var requestUrl = "/user/register";
         var createUserDto = UserDTO.builder()
@@ -264,6 +285,14 @@ public class ChirpTest {
 
     private void likeChirp(String username, ChirpDTO chirp) {
         var requestUrl = "/chirp/chirp/like/" + chirp.getId();
+        var request = authEntity(null, username);
+        var response = restTemplate
+            .postForEntity(requestUrl, request, Void.class);
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+    }
+
+    private void likeReply(String username, ReplyDTO reply) {
+        var requestUrl = "/chirp/reply/like/" + reply.getId();
         var request = authEntity(null, username);
         var response = restTemplate
             .postForEntity(requestUrl, request, Void.class);

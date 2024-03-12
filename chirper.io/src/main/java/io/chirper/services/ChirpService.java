@@ -42,4 +42,9 @@ public interface ChirpService {
         @NotNull UUID chirpId,
         @NotNull UUID userId
     );
+
+    void likeReply(
+        @NotNull UUID replyId,
+        @NotNull UUID userId
+    );
 }
