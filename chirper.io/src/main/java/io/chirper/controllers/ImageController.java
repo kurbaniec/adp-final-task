@@ -1,6 +1,7 @@
 package io.chirper.controllers;
 
 import io.chirper.services.ImageService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import java.util.UUID;
  */
 @Validated
 @RestController
+@SecurityRequirement(name = "basicAuth")
 @RequestMapping("/image")
 public class ImageController {
     private final ImageService imageService;

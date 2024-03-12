@@ -3,8 +3,10 @@ package io.chirper.services;
 import io.chirper.entities.User;
 import io.chirper.repositories.UserRepository;
 import io.chirper.validators.CreateUserValidation;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
@@ -39,6 +41,9 @@ public class DefaultUserService implements UserService {
     @Validated({CreateUserValidation.class})
     public User createUser(@Valid @NotNull User createUser, MultipartFile profileImage) {
         logger.debug("createUser({})", createUser);
+        if (userRepository.existsByUsername(createUser.getUsername())) {
+            throw new ConstraintViolationException("Username is already taken", null);
+        }
         if (profileImage != null) {
             var image = imageService.createImage(profileImage);
             createUser.setImageId(image.getId());

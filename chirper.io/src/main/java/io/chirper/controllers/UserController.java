@@ -2,9 +2,12 @@ package io.chirper.controllers;
 
 import io.chirper.dtos.UserDTO;
 import io.chirper.services.UserService;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,8 +34,9 @@ public class UserController {
         this.mapper = mapper;
     }
 
-    @PostMapping("/register")
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserDTO> register(
+        @Schema(example = "{\"username\": \"test\", \"password\": \"testtest\"}")
         @RequestPart(value = "data") @NotNull UserDTO createUser,
         @RequestPart(value = "file", required = false) MultipartFile file
     ) {

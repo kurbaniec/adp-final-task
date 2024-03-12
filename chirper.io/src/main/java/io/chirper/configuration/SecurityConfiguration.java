@@ -28,6 +28,23 @@ public class SecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
 
+    private static final String[] AUTH_WHITELIST = {
+        // -- User --
+        "/user/register",
+        // -- Swagger UI v2
+        "/v2/api-docs",
+        "/swagger-resources",
+        "/swagger-resources/**",
+        "/configuration/ui",
+        "/configuration/security",
+        "/swagger-ui.html",
+        "/webjars/**",
+        // -- Swagger UI v3 (OpenAPI)
+        "/v3/api-docs/**",
+        "/swagger-ui/**"
+        // other public endpoints of your API may be appended to this array
+    };
+
     @Bean
     @SuppressWarnings("removal")
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
@@ -41,7 +58,7 @@ public class SecurityConfiguration {
         httpSecurity
             .csrf().disable()
             .authorizeHttpRequests((requests) -> requests
-                .requestMatchers("/user/register").permitAll()
+                .requestMatchers(AUTH_WHITELIST).permitAll()
                 .anyRequest().authenticated()
             )
             .authenticationManager(authManager)

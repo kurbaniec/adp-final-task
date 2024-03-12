@@ -21,6 +21,8 @@ Test can be run via
 
 
 
+http://localhost:8080/swagger-ui/index.html
+
 
 
 TimeLimiter + BulkHead for Create Operations
