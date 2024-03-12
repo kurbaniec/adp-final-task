@@ -47,7 +47,7 @@ import static org.mockito.Mockito.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-public class FetchChirpTest {
+public class RetryCircuitBreakerRateLimiterTest {
 
     @Autowired
     private CircuitBreakerRegistry circuitBreakerRegistry;
