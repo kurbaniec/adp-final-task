@@ -47,11 +47,15 @@ Reflecting on the development of Chirper, our selection of resilience patterns w
 
 Queries, including actions like reading the feed or fetching chirps, were fortified with Retry, Circuit Breaker, and Rate Limiter patterns. This approach was designed to enhance fault tolerance, facilitate automatic recovery from errors, and manage the flow of requests to maintain system stability.
 
-
+![](.img/query-resilience.png)
 
 For mutations, which encompass operations like creating chirps and liking posts or replies, we employed the Circuit Breaker, Time Limiter, and Bulkhead patterns. This combination was chosen to guard against potential failures and ensure that Chirper remains responsive and reliable, especially under high load or during service disruptions. The Circuit Breaker pattern, in particular, plays a critical role in mutations by preventing a cascade of failures from overwhelming the system.
 
+![](.img/mutation-resilience.png)
+
 Specifically, for image handling within chirps, we introduced a Cache mechanism. This was aimed at optimizing performance and reducing latency, thus improving the overall user experience by ensuring quick access to frequently viewed content while easing the load on backend systems. Thereby we enhance system scalability and resource utilization.
+
+![](.img/cache-resilience.png)
 
 Choosing Resilience4j as our library was a deliberate decision, leveraging its comprehensive support for Spring Boot applications. This library not only facilitated the seamless integration of resilience patterns but also provided a robust framework for building a stable and efficient system.
 
