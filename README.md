@@ -75,6 +75,8 @@ Incorporating insights from our initial design considerations, we focused on ens
 
 In conclusion, the creation of Chirper was an iterative and reflective process. By strategically applying resilience patterns and continuously refining our approach based on both theoretical insights and practical challenges, we have endeavored to deliver a platform that is not only robust and reliable but also enriches the social media landscape with meaningful interactions and connections.
 
+> All diagrams can be found [here](https://excalidraw.com/#json=dTbSd3PAANqpTZ_-ZBBTJ,xSJk1Dq0RrZnGS2RTGxgSg).
+
 ## Sources
 
 * https://resilience4j.readme.io/docs/getting-started
