@@ -39,13 +39,17 @@ Resilience Tests can be run via
 
 ![image-20240312215555515](.img/image-20240312215555515.png)
 
+> Check out some example calls [here](./EXAMPLES.md).
+
 ## 💭 Reflection
 
 Reflecting on the development of Chirper, our selection of resilience patterns was a calculated decision aimed at enhancing the robustness and usability of the platform. From fundamental actions such as posting and retrieving chirps to the intricate management of image content, our strategy was informed by both the challenges presented by modern social media platforms and to ensure that the system remains responsive even during periods of high traffic or resource contention.
 
-For mutations, which encompass operations like creating chirps and liking posts or replies, we employed the Circuit Breaker, Time Limiter, and Bulkhead patterns. This combination was chosen to guard against potential failures and ensure that Chirper remains responsive and reliable, especially under high load or during service disruptions. The Circuit Breaker pattern, in particular, plays a critical role in mutations by preventing a cascade of failures from overwhelming the system.
-
 Queries, including actions like reading the feed or fetching chirps, were fortified with Retry, Circuit Breaker, and Rate Limiter patterns. This approach was designed to enhance fault tolerance, facilitate automatic recovery from errors, and manage the flow of requests to maintain system stability.
+
+
+
+For mutations, which encompass operations like creating chirps and liking posts or replies, we employed the Circuit Breaker, Time Limiter, and Bulkhead patterns. This combination was chosen to guard against potential failures and ensure that Chirper remains responsive and reliable, especially under high load or during service disruptions. The Circuit Breaker pattern, in particular, plays a critical role in mutations by preventing a cascade of failures from overwhelming the system.
 
 Specifically, for image handling within chirps, we introduced a Cache mechanism. This was aimed at optimizing performance and reducing latency, thus improving the overall user experience by ensuring quick access to frequently viewed content while easing the load on backend systems. Thereby we enhance system scalability and resource utilization.
 
@@ -78,3 +82,4 @@ In conclusion, the creation of Chirper was an iterative and reflective process. 
 * https://www.baeldung.com/java-db-storing-files
 * https://medium.com/@aamir.zaidi5/spring-security-implementation-805520a297d5
 * https://www.baeldung.com/spring-rest-openapi-documentation
+* https://medium.com/garantibbva-teknoloji/applying-the-five-most-used-resiliency-patterns-using-resilience4j-with-spring-boot-1cc695988d
